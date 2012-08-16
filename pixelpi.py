@@ -8,7 +8,7 @@ import csv
 
 parser = argparse.ArgumentParser(add_help=True, version='1.0')
 parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
-parser.add_argument('--filename', action='store', dest='filename', required=True, help='Specify the image file eg: hello.png')
+parser.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
 parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['strip', 'array', 'fade', 'chase'], help='Choose the display mode, either POV strip or 2D array, color, chase')
 parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 parser.add_argument('--array_width', action='store', dest='array_width', required=False,  type=int, default='7', help='Set the X dimension of your pixel array (width)')
@@ -27,12 +27,13 @@ print "Array Dimensions      = %dx%d" % (args.array_width, args.array_height)
 
 # Open SPI device, load image in RGB format and get dimensions:
 spidev = file(args.spi_dev_name, "wb")
-print "Loading..."
-img = Image.open(args.filename).convert("RGB")
-pixels = img.load()
-width = img.size[0]
-height = img.size[1]
-print "%dx%d pixels" % img.size
+if args.mode == ('array', 'strip'):
+	print "Loading..."
+	img = Image.open(args.filename).convert("RGB")
+	pixels = img.load()
+	width = img.size[0]
+	height = img.size[1]
+	print "%dx%d pixels" % img.size
 
 # To do: add resize here if image is not desired height
 
@@ -112,7 +113,7 @@ if args.mode == 'array':
 		time.sleep((args.refresh_rate)/1000.0)
 
 if args.mode == 'fade':
-	pixel_output = bytearray(width * height * 3 + 3)
+	pixel_output = bytearray(args.num_leds * 3 + 3)
 	print "Displaying..."
 	a = 0
 	dir = 0
@@ -150,7 +151,7 @@ if args.mode == 'fade':
 				time.sleep((args.refresh_rate)/1000.0)
 
 if args.mode == 'chase':
-	pixel_output = bytearray(width * height * 3 + 3)
+	pixel_output = bytearray(args.num_leds * 3 + 3)
 	print "Displaying..."
 	a = 0
 	dir = 0
