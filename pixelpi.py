@@ -9,12 +9,13 @@ import csv
 parser = argparse.ArgumentParser(add_help=True, version='1.0')
 parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
 parser.add_argument('--filename', action='store', dest='filename', required=True, help='Specify the image file eg: hello.png')
-parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['strip', 'array'], help='Choose the display mode, either POV strip or 2D array')
+parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['strip', 'array', 'fade', 'chase'], help='Choose the display mode, either POV strip or 2D array, color, chase')
 parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 parser.add_argument('--array_width', action='store', dest='array_width', required=False,  type=int, default='7', help='Set the X dimension of your pixel array (width)')
 parser.add_argument('--array_height', action='store', dest='array_height', required=False,  type=int, default='7', help='Set the Y dimension of your pixel array (height)')
 parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
-parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=0.5, type=int,  help='Set the refresh rate (default 0.5 seconds)')
+parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int,  help='Set the refresh rate in ms (default 500ms)')
+parser.add_argument('--num_leds', action='store', dest='num_leds', required=False, default=50, type=int,  help='Set the  number of LEDs in the string (used in fade and chase mode)')
 args = parser.parse_args()
 
 print "Chip Type             = %s" % args.chip_type
@@ -42,6 +43,10 @@ if args.chip_type == "LDP8806":
 	for i in range(256):
 		gamma[i] = 0x80 | int(pow(float(i) / 255.0, 2.5) * 127.0 + 0.5)
 
+if args.chip_type == "WS2801":
+	gamma = bytearray(256)
+	for i in range(256):
+		gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
 
 if args.mode == 'strip':
 	# Create bytearray for the entire image
@@ -73,7 +78,7 @@ if args.mode == 'strip':
 			spidev.write(column[x])
 			spidev.flush()
 			time.sleep(0.001)
-		time.sleep(args.refresh_rate)
+		time.sleep((args.refresh_rate/100.0))
 
 if args.mode == 'array':
 	print "Reading in array map"
@@ -97,17 +102,104 @@ if args.mode == 'array':
 			pixel_output[array_index * 3 + 1] = gamma[value[0]]
 			pixel_output[array_index * 3+ 2] = gamma[value[2]]
 		else:
-			pixel_output[array_index * 3] = value[0]
-			pixel_output[array_index * 3 + 1] = value[1]
-			pixel_output[array_index * 3 + 2] = value[2]
-	
-
+			pixel_output[array_index * 3] = gamma[value[0]]
+			pixel_output[array_index * 3 + 1] = gamma[value[1]]
+			pixel_output[array_index * 3 + 2] = gamma[value[2]]
 	print "Displaying..."
 	while True:
 		spidev.write(pixel_output)
 		spidev.flush()
-		time.sleep(0.001)
-		time.sleep(args.refresh_rate)
+		time.sleep((args.refresh_rate)/1000.0)
+
+if args.mode == 'fade':
+	pixel_output = bytearray(width * height * 3 + 3)
+	print "Displaying..."
+	a = 0
+	dir = 0
+	current_color = bytearray(3)
+
+
+	while True:
+		for color in ('red', 'green', 'blue'):
+			for brightness in range(255):
+				if color == 'red':
+					current_color[0] = brightness
+					current_color[1] = 0
+					current_color[2] = 0
+				if color == 'green':
+					current_color[0] = 0
+					current_color[1] = brightness
+					current_color[2] = 0
+				if color == 'blue':
+					current_color[0] = 0
+					current_color[1] = 0
+					current_color[2] = brightness
+
+				for pixel in range(args.num_leds):
+					if args.chip_type == "LDP8806":
+						# Convert RGB into column-wise GRB bytearray list.
+						pixel_output[pixel * 3] = gamma[current_color[1]]
+						pixel_output[pixel * 3 + 1] = gamma[current_color[0]]
+						pixel_output[pixel * 3 + 2] = gamma[current_color[2]]
+					else:
+						pixel_output[pixel * 3] = gamma[current_color[0]]
+						pixel_output[pixel * 3 + 1] = gamma[current_color[1]]
+						pixel_output[pixel * 3 + 2] = gamma[current_color[2]]
+				spidev.write(pixel_output)
+				spidev.flush()
+				time.sleep((args.refresh_rate)/1000.0)
+
+if args.mode == 'chase':
+	pixel_output = bytearray(width * height * 3 + 3)
+	print "Displaying..."
+	a = 0
+	dir = 0
+	current_color = bytearray(3)
+
+	while True:
+		for color in ('red', 'green', 'blue'):
+			if color == 'red':
+				current_color[0] = 255
+				current_color[1] = 0
+				current_color[2] = 0
+			if color == 'green':
+				current_color[0] = 0
+				current_color[1] = 255
+				current_color[2] = 0
+			if color == 'blue':
+				current_color[0] = 0
+				current_color[1] = 0
+				current_color[2] = 255
+
+			while True:
+				if dir == 0:
+					if a != 49:
+						a = a+1
+					else:
+						dir = 1
+				else:
+					if a != 0:
+						a = a - 1
+					else:
+						dir = 0
+						break
+
+				for pixel in range(50):
+					pixel_output[pixel * 3] = 0
+					pixel_output[pixel * 3 + 1] = 0
+					pixel_output[pixel * 3 + 2] = 0
+				if args.chip_type == "LDP8806":
+					# Convert RGB into column-wise GRB bytearray list.
+					pixel_output[a * 3] = gamma[current_color[1]]
+					pixel_output[a * 3 + 1] = gamma[current_color[0]]
+					pixel_output[a * 3 + 2] = gamma[current_color[2]]
+				else:
+					pixel_output[a * 3] = gamma[current_color[0]]
+					pixel_output[a * 3 + 1] = gamma[current_color[1]]
+					pixel_output[a * 3 + 2] = gamma[current_color[2]]
+				spidev.write(pixel_output)
+				spidev.flush()
+				time.sleep((args.refresh_rate)/1000.0)
 
 
 
