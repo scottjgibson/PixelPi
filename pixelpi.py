@@ -9,7 +9,7 @@ import csv
 parser = argparse.ArgumentParser(add_help=True, version='1.0')
 parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
 parser.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
-parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['strip', 'array', 'fade', 'chase'], help='Choose the display mode, either POV strip or 2D array, color, chase')
+parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['all_off', 'all_on', 'strip', 'array', 'fade', 'chase'], help='Choose the display mode, either POV strip or 2D array, color, chase')
 parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 parser.add_argument('--array_width', action='store', dest='array_width', required=False,  type=int, default='7', help='Set the X dimension of your pixel array (width)')
 parser.add_argument('--array_height', action='store', dest='array_height', required=False,  type=int, default='7', help='Set the Y dimension of your pixel array (height)')
@@ -111,12 +111,35 @@ if args.mode == 'array':
 		spidev.write(pixel_output)
 		spidev.flush()
 		time.sleep((args.refresh_rate)/1000.0)
+if args.mode == 'all_off':
+	pixel_output = bytearray(args.num_leds * 3 + 3)
+	print "Displaying..."
+	current_color = bytearray(3)
+
+	spidev.write(pixel_output)
+	spidev.flush()
+	time.sleep((args.refresh_rate)/1000.0)
+
+if args.mode == 'all_on':
+	pixel_output = bytearray(args.num_leds * 3 + 3)
+	print "Displaying..."
+	current_color = bytearray(3)
+	current_color[0] = 255
+	current_color[1] = 255
+	current_color[2] = 255
+	
+	for led in range(args.num_leds):
+		pixel_output[led*3] = current_color
+	
+
+	spidev.write(pixel_output)
+	spidev.flush()
+	time.sleep((args.refresh_rate)/1000.0)
+
 
 if args.mode == 'fade':
 	pixel_output = bytearray(args.num_leds * 3 + 3)
 	print "Displaying..."
-	a = 0
-	dir = 0
 	current_color = bytearray(3)
 
 
