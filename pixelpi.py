@@ -1,4 +1,4 @@
-#!/usr/bin/python
+
 
 import RPi.GPIO as GPIO
 import Image
@@ -13,7 +13,7 @@ UDP_PORT=6803
 parser = argparse.ArgumentParser(add_help=True, version='1.0')
 parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
 parser.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
-parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['pixel_invaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase'], help='Choose the display mode, either POV strip or 2D array, color, chase')
+parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['pixel_invaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase', 'chase_fancy'], help='Choose the display mode, either POV strip or 2D array, color, chase, chase_fancy')
 parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 parser.add_argument('--array_width', action='store', dest='array_width', required=False,  type=int, default='7', help='Set the X dimension of your pixel array (width)')
 parser.add_argument('--array_height', action='store', dest='array_height', required=False,  type=int, default='7', help='Set the Y dimension of your pixel array (height)')
@@ -59,7 +59,7 @@ if args.mode == 'pixel_invaders':
 	sock.bind( (UDP_IP,UDP_PORT) )
 	while True:
 		data, addr = sock.recvfrom( 1024 ) # buffer size is 1024 bytes blocking call
-		spidev.write(pixel_output)
+		spidev.write(data)
 		spidev.flush()
 
 
@@ -223,6 +223,67 @@ if args.mode == 'chase':
 					else:
 						dir = 0
 						break
+
+				for pixel in range(50):
+					pixel_output[pixel * 3] = 0
+					pixel_output[pixel * 3 + 1] = 0
+					pixel_output[pixel * 3 + 2] = 0
+				if args.chip_type == "LDP8806":
+					# Convert RGB into column-wise GRB bytearray list.
+					pixel_output[a * 3] = gamma[current_color[1]]
+					pixel_output[a * 3 + 1] = gamma[current_color[0]]
+					pixel_output[a * 3 + 2] = gamma[current_color[2]]
+				else:
+					pixel_output[a * 3] = gamma[current_color[0]]
+					pixel_output[a * 3 + 1] = gamma[current_color[1]]
+					pixel_output[a * 3 + 2] = gamma[current_color[2]]
+				spidev.write(pixel_output)
+				spidev.flush()
+				time.sleep((args.refresh_rate)/1000.0)
+
+if args.mode == 'chase_fancy':
+	pixel_output = bytearray(args.num_leds * 3 + 3)
+	print "Displaying..."
+	a = 0
+	flame = bytearray(4*3)
+	flame[0]= 255;
+	flame[1] = 255
+	flame[2] = 0
+	flame[3]= 255;
+	flame[4] = 45
+	flame[5] = 0
+	flame[6]= 255;
+	flame[7] = 0
+	flame[2] = 0
+	flame[9]= 0;
+	flame[10] = 0
+	flame[11] = 0
+
+	while True:
+#		for color in ('red', 'green', 'blue'):
+#			if color == 'red':
+#				current_color[0] = 255
+#				current_color[1] = 0
+#				current_color[2] = 0
+#			if color == 'green':
+#				current_color[0] = 0
+#				current_color[1] = 255
+#				current_color[2] = 0
+#			if color == 'blue':
+#				current_color[0] = 0
+#				current_color[1] = 0
+#				current_color[2] = 255
+
+			while True:
+				#turn off 
+				pixel_output[pixel * 3] = 0
+				pixel_output[pixel * 3 + 1] = 0
+				pixel_output[pixel * 3 + 2] = 0
+
+				if a != 49:
+					a = a+1
+				else:
+					a = 0
 
 				for pixel in range(50):
 					pixel_output[pixel * 3] = 0
