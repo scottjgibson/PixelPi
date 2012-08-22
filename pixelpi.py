@@ -7,19 +7,18 @@ import argparse
 import csv
 import socket
 
-UDP_IP="192.168.1.123"
-UDP_PORT=6803
-
 parser = argparse.ArgumentParser(add_help=True, version='1.0')
 parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
 parser.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
-parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['pixel_invaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase', 'chase_fancy'], help='Choose the display mode, either POV strip or 2D array, color, chase, chase_fancy')
+parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['pixelinvaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase', 'chase_fancy'], help='Choose the display mode, either POV strip or 2D array, color, chase, chase_fancy')
 parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 parser.add_argument('--array_width', action='store', dest='array_width', required=False,  type=int, default='7', help='Set the X dimension of your pixel array (width)')
 parser.add_argument('--array_height', action='store', dest='array_height', required=False,  type=int, default='7', help='Set the Y dimension of your pixel array (height)')
 parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
 parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int,  help='Set the refresh rate in ms (default 500ms)')
 parser.add_argument('--num_leds', action='store', dest='num_leds', required=False, default=50, type=int,  help='Set the  number of LEDs in the string (used in fade and chase mode)')
+parser.add_argument('--udp-ip', action='store', dest='UDP_IP', required=False, default='192.168.1.1', help='Used for PixelInvaders mode, listening address')
+parser.add_argument('--udp-port', action='store', dest='UDP_PORT', required=False, default=6803, type=int, help='Used for PixelInvaders mode, listening port')
 args = parser.parse_args()
 
 print "Chip Type             = %s" % args.chip_type
@@ -53,10 +52,11 @@ if args.chip_type == "WS2801":
 	for i in range(256):
 		gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
 
-if args.mode == 'pixel_invaders':
+if args.mode == 'pixelinvaders':
+	print ("Start PixelInvaders listener "+args.UDP_IP+":"+str(args.UDP_PORT))
 	sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
-	sock.bind( (UDP_IP,UDP_PORT) )
+	sock.bind( (args.UDP_IP,args.UDP_PORT) )
 	while True:
 		data, addr = sock.recvfrom( 1024 ) # buffer size is 1024 bytes blocking call
 		spidev.write(data)
