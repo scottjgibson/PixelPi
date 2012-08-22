@@ -13,7 +13,7 @@ UDP_PORT=6803
 parser = argparse.ArgumentParser(add_help=True, version='1.0')
 parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
 parser.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
-parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['pixel_invaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase', 'chase_fancy'], help='Choose the display mode, either POV strip or 2D array, color, chase, chase_fancy')
+parser.add_argument('--mode', action='store', dest='mode', required=True, choices=['pixelinvaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase', 'chase_fancy'], help='Choose the display mode, either POV strip or 2D array, color, chase, chase_fancy')
 parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 parser.add_argument('--array_width', action='store', dest='array_width', required=False,  type=int, default='7', help='Set the X dimension of your pixel array (width)')
 parser.add_argument('--array_height', action='store', dest='array_height', required=False,  type=int, default='7', help='Set the Y dimension of your pixel array (height)')
@@ -53,7 +53,8 @@ if args.chip_type == "WS2801":
 	for i in range(256):
 		gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
 
-if args.mode == 'pixel_invaders':
+if args.mode == 'pixelinvaders':
+	print ("Start PixelInvaders listener "+UDP_IP+":"+str(UDP_PORT))
 	sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
 	sock.bind( (UDP_IP,UDP_PORT) )
