@@ -150,12 +150,12 @@ if args.mode == 'pixelinvaders':
 	print ("Start PixelInvaders listener "+args.UDP_IP+":"+str(args.UDP_PORT))
 	sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
-    sock.bind( (UDP_IP,UDP_PORT) )
+    sock.bind( (args.UDP_IP,args.UDP_PORT) )
     while True:
         data, addr = sock.recvfrom( 1024 ) # buffer size is 1024 bytes blocking call
         spidev.write(data)
         spidev.flush()
-=======
+
 if args.mode == 'pixelinvaders':
 	print ("Start PixelInvaders listener "+args.UDP_IP+":"+str(args.UDP_PORT))
 	sock = socket.socket( socket.AF_INET, # Internet
@@ -174,7 +174,6 @@ if args.mode == 'strip':
     column = [0 for x in range(width)]
     for x in range(width):
         column[x] = bytearray(height * PIXEL_SIZE + 1)
-
 
     print "Converting..."
     for x in range(width):
