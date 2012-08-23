@@ -63,7 +63,7 @@ parser.add_argument('--mode',
         dest='mode',
         required=True,
         choices=['pixelinvaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase'],
-        help='Choose the display mode, either POV strip or 2D array, color, chase')
+        help='Choose the display mode, pixelinvaders, either POV strip or 2D array, color, chase, all on or all off')
 parser.add_argument('--verbose',
         action='store_true',
         dest='verbose',
@@ -150,32 +150,21 @@ if args.mode == 'pixelinvaders':
 	print ("Start PixelInvaders listener "+args.UDP_IP+":"+str(args.UDP_PORT))
 	sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
-    sock.bind( (args.UDP_IP,args.UDP_PORT) )
-    while True:
-        data, addr = sock.recvfrom( 1024 ) # buffer size is 1024 bytes blocking call
-        spidev.write(data)
-        spidev.flush()
-
-if args.mode == 'pixelinvaders':
-	print ("Start PixelInvaders listener "+args.UDP_IP+":"+str(args.UDP_PORT))
-	sock = socket.socket( socket.AF_INET, # Internet
-                      socket.SOCK_DGRAM ) # UDP
 	sock.bind( (args.UDP_IP,args.UDP_PORT) )
 	while True:
 		data, addr = sock.recvfrom( 1024 ) # buffer size is 1024 bytes blocking call
 		spidev.write(data)
 		spidev.flush()
 
-
 if args.mode == 'strip':
     # Create bytearray for the entire image
-    # R, G, B byte per pixel, plus extra '0' byte at end for latch.
-    print "Allocating Strip..."
+    # R, G, B byte per pixel, plus extra '0' byte at end for latch. 
+    printf "Allocating..."
     column = [0 for x in range(width)]
     for x in range(width):
         column[x] = bytearray(height * PIXEL_SIZE + 1)
 
-    print "Converting..."
+    print "Process Image..."
     for x in range(width):
         for y in range(height):
             value = pixels[x, y]
@@ -196,49 +185,39 @@ if args.mode == 'strip':
             spidev.write(column[x])
             spidev.flush()
             time.sleep(0.001)
-        time.sleep((args.refresh_rate/100.0))
+        time.sleep((args.refresh_rate/1000.0))
 
 if args.mode == 'array':
     print "Reading in array map"
-
     pixel_map_csv = csv.reader(open("pixel_map.csv", "rb"))
     pixel_map = []
     for p in pixel_map_csv:
         pixel_map.append(p)
-
     if len(pixel_map) != args.array_width * args.array_height:
         print "Map size error"
-    
     print "Remapping"
     # Create a byte array ordered according to the pixel map file
     pixel_output = bytearray(width * height * PIXEL_SIZE + 1)
     for array_index in range(len(pixel_map)):
         value = pixels[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])]
-	pixel_output[(array_index * PIXEL_SIZE)] = filter_pixel[value:, 1]
+	pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value:, 1)
     print "Displaying..."
-    while True:
-        spidev.write(pixel_output)
-        spidev.flush()
-        time.sleep((args.refresh_rate)/1000.0)
+    spidev.write(pixel_output)
+    spidev.flush()
 
 if args.mode == 'all_off':
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
-    print "Displaying..."
+    print "Turning all LEDs Off"
     spidev.write(pixel_output)
     spidev.flush()
-    time.sleep((args.refresh_rate)/1000.0)
 
 if args.mode == 'all_on':
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
-    print "Displaying..."
-    
+    print "Turning all LEDs On"
     for led in range(args.num_leds):
-        pixel_output[led*PIXEL_SIZE:] = WHITE
-    
+        pixel_output[led*PIXEL_SIZE:] = filter_pixel(WHITE, 1)
     spidev.write(pixel_output)
     spidev.flush()
-    time.sleep((args.refresh_rate)/1000.0)
-
 
 if args.mode == 'fade':
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
