@@ -194,8 +194,8 @@ parser.add_argument('--mode',
         action='store',
         dest='mode',
         required=True,
-        choices=['wiimote', 'pixelinvaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase'],
-        help='Choose the display mode, wiimote, pixelinvaders, either POV strip or 2D array, color, chase, all on or all off')
+        choices=['pan', 'wiimote', 'pixelinvaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase'],
+        help='Choose the display mode, pan, wiimote, pixelinvaders, either POV strip or 2D array, color, chase, all on or all off')
 parser.add_argument('--verbose',
         action='store_true',
         dest='verbose',
@@ -261,9 +261,9 @@ spidev = file(args.spi_dev_name, "wb")
 if args.mode in ['array' , 'strip']:
     print "Loading..."
     img = Image.open(args.filename).convert("RGB")
-    pixels = img.load()
-    width = img.size[0]
-    height = img.size[1]
+    input_image = img.load()
+    image_width = img.size[0]
+    image_height = img.size[1]
     print "%dx%d pixels" % img.size
 
 # To do: add resize here if image is not desired height
@@ -292,14 +292,14 @@ if args.mode == 'strip':
     # Create bytearray for the entire image
     # R, G, B byte per pixel, plus extra '0' byte at end for latch. 
     print "Allocating..."
-    column = [0 for x in range(width)]
-    for x in range(width):
-        column[x] = bytearray(height * PIXEL_SIZE + 1)
+    column = [0 for x in range(image_width)]
+    for x in range(image_width):
+        column[x] = bytearray(array_height * PIXEL_SIZE + 1)
 
     print "Process Image..."
-    for x in range(width):
-        for y in range(height):
-            value = pixels[x, y]
+    for x in range(image_width):
+        for y in range(array_height):
+            value = input_image[x, y]
             y3 = y * 3
             if args.chip_type == "LDP8806":
                 # Convert RGB into column-wise GRB bytearray list.
@@ -313,7 +313,7 @@ if args.mode == 'strip':
 
     print "Displaying..."
     while True:
-        for x in range(width):
+        for x in range(image_width):
             spidev.write(column[x])
             spidev.flush()
             time.sleep(0.001)
@@ -328,14 +328,37 @@ if args.mode == 'array':
     if len(pixel_map) != args.array_width * args.array_height:
         print "Map size error"
     print "Remapping"
+
     # Create a byte array ordered according to the pixel map file
-    pixel_output = bytearray(width * height * PIXEL_SIZE + 1)
+    pixel_output = bytearray(array_width * array_height * PIXEL_SIZE + 1)
     for array_index in range(len(pixel_map)):
-        value = pixels[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])]
+        value = input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])]
 	pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
     print "Displaying..."
     spidev.write(pixel_output)
     spidev.flush()
+
+if args.mode == 'pan':
+    print "Reading in array map"
+    pixel_map_csv = csv.reader(open("pixel_map.csv", "rb"))
+    pixel_map = []
+    for p in pixel_map_csv:
+        pixel_map.append(p)
+    if len(pixel_map) != args.array_width * args.array_height:
+        print "Map size error"
+    print "Remapping"
+
+    # Create a byte array ordered according to the pixel map file
+    pixel_output = bytearray(array_width * array_height * PIXEL_SIZE + 1)
+    while true:
+        for x_offset in range(image_width - array_width):
+		for array_index in range(len(pixel_map)):
+		    value = input_image[int(pixel_map[array_index][0]+ x_offset), int(pixel_map[array_index][1])]
+		pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
+		print "Displaying..."
+		spidev.write(pixel_output)
+		spidev.flush()
+		time.sleep((args.refresh_rate)/1000.0)
 
 if args.mode == 'all_off':
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
