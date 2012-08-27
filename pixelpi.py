@@ -157,128 +157,8 @@ YELLOWGREEN = bytearray(b'\x9a\xcd\x32')
 RAINBOW = [AQUA, AQUAMARINE, AZURE, BEIGE, BISQUE, BLANCHEDALMOND, BLUE, BLUEVIOLET, BROWN, BURLYWOOD, CADETBLUE, CHARTREUSE, CHOCOLATE, CORAL, CORNFLOWERBLUE, CORNSILK, CRIMSON, CYAN, DARKBLUE, DARKCYAN, DARKGOLDENROD, DARKGRAY, DARKGREY, DARKGREEN, DARKKHAKI, DARKMAGENTA, DARKOLIVEGREEN, DARKORANGE, DARKORCHID, DARKRED, DARKSALMON, DARKSEAGREEN, DARKSLATEBLUE, DARKSLATEGRAY, DARKSLATEGREY, DARKTURQUOISE, DARKVIOLET, DEEPPINK, DEEPSKYBLUE, DIMGRAY, DIMGREY, DODGERBLUE, FIREBRICK, FLORALWHITE, FORESTGREEN, FUCHSIA, GAINSBORO, GHOSTWHITE, GOLD, GOLDENROD, GRAY, GREY, GREEN, GREENYELLOW, HONEYDEW, HOTPINK, INDIANRED, INDIGO, IVORY, KHAKI, LAVENDER, LAVENDERBLUSH, LAWNGREEN, LEMONCHIFFON, LIGHTBLUE, LIGHTCORAL, LIGHTCYAN, LIGHTGOLDENRODYELLOW, LIGHTGRAY, LIGHTGREY, LIGHTGREEN, LIGHTPINK, LIGHTSALMON, LIGHTSEAGREEN, LIGHTSKYBLUE, LIGHTSLATEGRAY, LIGHTSLATEGREY, LIGHTSTEELBLUE, LIGHTYELLOW, LIME, LIMEGREEN, LINEN, MAGENTA, MAROON, MEDIUMAQUAMARINE, MEDIUMBLUE, MEDIUMORCHID, MEDIUMPURPLE, MEDIUMSEAGREEN, MEDIUMSLATEBLUE, MEDIUMSPRINGGREEN, MEDIUMTURQUOISE, MEDIUMVIOLETRED, MIDNIGHTBLUE, MINTCREAM, MISTYROSE, MOCCASIN, NAVAJOWHITE, NAVY, OLDLACE, OLIVE, OLIVEDRAB, ORANGE, ORANGERED, ORCHID, PALEGOLDENROD, PALEGREEN, PALETURQUOISE, PALEVIOLETRED, PAPAYAWHIP, PEACHPUFF, PERU, PINK, PLUM, POWDERBLUE, PURPLE, RED, ROSYBROWN, ROYALBLUE, SADDLEBROWN, SALMON, SANDYBROWN, SEAGREEN, SEASHELL, SIENNA, SILVER, SKYBLUE, SLATEBLUE, SLATEGRAY, SLATEGREY, SNOW, SPRINGGREEN, STEELBLUE, TAN, TEAL, THISTLE, TOMATO, TURQUOISE, VIOLET, WHEAT, WHITE, WHITESMOKE, YELLOW, YELLOWGREEN, YELLOWGREEN]
 
 
-gamma = bytearray(256)
 
-# Apply Gamma Correction and RGB / GRB reordering
-# Optionally perform brightness adjustment
-def filter_pixel(input_pixel, brightness):
-    input_pixel[0] = int(brightness * input_pixel[0])
-    input_pixel[1] = int(brightness * input_pixel[1])
-    input_pixel[2] = int(brightness * input_pixel[2])
-    output_pixel = bytearray(PIXEL_SIZE)
-    if args.chip_type == "LDP8806":
-        # Convert RGB into GRB bytearray list.
-        output_pixel[0] = gamma[input_pixel[1]]
-        output_pixel[1] = gamma[input_pixel[0]]
-        output_pixel[2] = gamma[input_pixel[2]]
-    else:
-        output_pixel[0] = gamma[input_pixel[0]]
-        output_pixel[1] = gamma[input_pixel[1]]
-        output_pixel[2] = gamma[input_pixel[2]]
-    return output_pixel
-
-
-parser = argparse.ArgumentParser(add_help=True,version='1.0')
-parser.add_argument('--chip',
-        action='store',
-        dest='chip_type',
-        default='WS2801',
-        choices=['WS2801', 'LDP8806'],
-        help='Specify chip type LDP8806 or WS2801')
-parser.add_argument('--filename',
-        action='store',
-        dest='filename',
-        required=False,
-        help='Specify the image file eg: hello.png')
-parser.add_argument('--mode',
-        action='store',
-        dest='mode',
-        required=True,
-        choices=['pan', 'wiimote', 'pixelinvaders', 'all_off', 'all_on', 'strip', 'array', 'fade', 'chase'],
-        help='Choose the display mode, pan, wiimote, pixelinvaders, either POV strip or 2D array, color, chase, all on or all off')
-parser.add_argument('--verbose',
-        action='store_true',
-        dest='verbose',
-        default=True,
-        help='enable verbose mode')
-parser.add_argument('--array_width',
-        action='store',
-        dest='array_width',
-        required=False,
-        type=int,
-        default='7',
-        help='Set the X dimension of your pixel array (width)')
-parser.add_argument('--array_height',
-        action='store',
-        dest='array_height',
-        required=False,
-        type=int,
-        default='7',
-        help='Set the Y dimension of your pixel array (height)')
-parser.add_argument('--spi_dev',
-        action='store',
-        dest='spi_dev_name',
-        required=False,
-        default='/dev/spidev0.0',
-        help='Set the SPI device descriptor')
-parser.add_argument('--refresh_rate',
-        action='store',
-        dest='refresh_rate',
-        required=False,
-        default=500,
-        type=int,
-        help='Set the refresh rate in ms (default 500ms)')
-parser.add_argument('--num_leds',
-        action='store',
-        dest='num_leds',
-        required=False,
-        default=50,
-        type=int,  help='Set the  number of LEDs in the string (used in fade and chase mode)')
-parser.add_argument('--udp-ip',
-	action='store',
-	dest='UDP_IP',
-	required=False,
-	default='192.168.1.1',
-	help='Used for PixelInvaders mode, listening address')
-parser.add_argument('--udp-port',
-	action='store',
-	dest='UDP_PORT',
-	required=False,
-	default=6803,
-	type=int,
-	help='Used for PixelInvaders mode, listening port')
-args = parser.parse_args()
-
-print "Chip Type             = %s" % args.chip_type
-print "File Name             = %s" % args.filename
-print "Display Mode          = %s" % args.mode
-print "SPI Device Descriptor = %s" % args.spi_dev_name
-print "Refresh Rate          = %s" % args.refresh_rate
-print "Array Dimensions      = %dx%d" % (args.array_width, args.array_height)
-
-# Open SPI device, load image in RGB format and get dimensions:
-spidev = file(args.spi_dev_name, "wb")
-if args.mode in ['array' , 'strip']:
-    print "Loading..."
-    img = Image.open(args.filename).convert("RGB")
-    input_image = img.load()
-    image_width = img.size[0]
-    image_height = img.size[1]
-    print "%dx%d pixels" % img.size
-
-# To do: add resize here if image is not desired height
-
-# Calculate gamma correction table. This includes
-# LPD8806-specific conversion (7-bit color w/high bit set).
-if args.chip_type == "LDP8806":
-    for i in range(256):
-        gamma[i] = 0x80 | int(pow(float(i) / 255.0, 2.5) * 127.0 + 0.5)
-
-if args.chip_type == "WS2801":
-    for i in range(256):
-        gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
-
-if args.mode == 'pixelinvaders':
+def pixelinvaders():
 	print ("Start PixelInvaders listener "+args.UDP_IP+":"+str(args.UDP_PORT))
 	sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
@@ -288,17 +168,22 @@ if args.mode == 'pixelinvaders':
 		spidev.write(data)
 		spidev.flush()
 
-if args.mode == 'strip':
+def strip():
+    img = Image.open(args.filename).convert("RGB")
+    input_image = img.load()
+    image_width = img.size[0]
+    image_height = img.size[1]
+    print "%dx%d pixels" % img.size
     # Create bytearray for the entire image
     # R, G, B byte per pixel, plus extra '0' byte at end for latch. 
     print "Allocating..."
     column = [0 for x in range(image_width)]
     for x in range(image_width):
-        column[x] = bytearray(array_height * PIXEL_SIZE + 1)
+        column[x] = bytearray(args.array_height * PIXEL_SIZE + 1)
 
     print "Process Image..."
     for x in range(image_width):
-        for y in range(array_height):
+        for y in range(args.array_height):
             value = input_image[x, y]
             y3 = y * 3
             if args.chip_type == "LDP8806":
@@ -319,7 +204,12 @@ if args.mode == 'strip':
             time.sleep(0.001)
         time.sleep((args.refresh_rate/1000.0))
 
-if args.mode == 'array':
+def array():
+    img = Image.open(args.filename).convert("RGB")
+    input_image = img.load()
+    image_width = img.size[0]
+    image_height = img.size[1]
+    print "%dx%d pixels" % img.size
     print "Reading in array map"
     pixel_map_csv = csv.reader(open("pixel_map.csv", "rb"))
     pixel_map = []
@@ -328,17 +218,23 @@ if args.mode == 'array':
     if len(pixel_map) != args.array_width * args.array_height:
         print "Map size error"
     print "Remapping"
+    value = bytearray(PIXEL_SIZE)
 
     # Create a byte array ordered according to the pixel map file
-    pixel_output = bytearray(array_width * array_height * PIXEL_SIZE + 1)
+    pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
     for array_index in range(len(pixel_map)):
-        value = input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])]
+        value = bytearray(input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])])
 	pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
     print "Displaying..."
     spidev.write(pixel_output)
     spidev.flush()
 
-if args.mode == 'pan':
+def pan():
+    img = Image.open(args.filename).convert("RGB")
+    input_image = img.load()
+    image_width = img.size[0]
+    image_height = img.size[1]
+    print "%dx%d pixels" % img.size
     print "Reading in array map"
     pixel_map_csv = csv.reader(open("pixel_map.csv", "rb"))
     pixel_map = []
@@ -349,24 +245,26 @@ if args.mode == 'pan':
     print "Remapping"
 
     # Create a byte array ordered according to the pixel map file
-    pixel_output = bytearray(array_width * array_height * PIXEL_SIZE + 1)
-    while true:
-        for x_offset in range(image_width - array_width):
+    pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
+    while True:
+        for x_offset in range(image_width - args.array_width):
+#		import pdb
+#		pdb.set_trace()
 		for array_index in range(len(pixel_map)):
-		    value = input_image[int(pixel_map[array_index][0]+ x_offset), int(pixel_map[array_index][1])]
-		pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
+		    value = bytearray(input_image[int(int(pixel_map[array_index][0])+ x_offset), int(pixel_map[array_index][1])])
+		    pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
 		print "Displaying..."
 		spidev.write(pixel_output)
 		spidev.flush()
 		time.sleep((args.refresh_rate)/1000.0)
 
-if args.mode == 'all_off':
+def all_off():
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
     print "Turning all LEDs Off"
     spidev.write(pixel_output)
     spidev.flush()
 
-if args.mode == 'all_on':
+def all_on():
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
     print "Turning all LEDs On"
     for led in range(args.num_leds):
@@ -374,7 +272,7 @@ if args.mode == 'all_on':
     spidev.write(pixel_output)
     spidev.flush()
 
-if args.mode == 'fade':
+def fade():
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
     print "Displaying..."
     current_color = bytearray(PIXEL_SIZE)
@@ -397,7 +295,7 @@ if args.mode == 'fade':
                 time.sleep((args.refresh_rate)/1000.0)
 
 
-if args.mode == 'wiimote':
+def wiimote():
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
     print 'Put Wiimote in discoverable mode now (press 1+2)...'
     global wiimote
@@ -433,7 +331,7 @@ if args.mode == 'wiimote':
 
 
 
-if args.mode == 'chase':
+def chase():
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
     print "Displaying..."
     current_color = bytearray(PIXEL_SIZE)
@@ -450,6 +348,93 @@ if args.mode == 'chase':
                 time.sleep((args.refresh_rate)/1000.0)
                 pixel_output[((pixel_index-2)*PIXEL_SIZE):] = filter_pixel(current_color[:], 0)
 
+
+
+gamma = bytearray(256)
+
+# Open SPI device, load image in RGB format and get dimensions:
+def load_image():
+    print "Loading..."
+
+# Apply Gamma Correction and RGB / GRB reordering
+# Optionally perform brightness adjustment
+def filter_pixel(input_pixel, brightness):
+    input_pixel[0] = int(brightness * input_pixel[0])
+    input_pixel[1] = int(brightness * input_pixel[1])
+    input_pixel[2] = int(brightness * input_pixel[2])
+    output_pixel = bytearray(PIXEL_SIZE)
+    if args.chip_type == "LDP8806":
+        # Convert RGB into GRB bytearray list.
+        output_pixel[0] = gamma[input_pixel[1]]
+        output_pixel[1] = gamma[input_pixel[0]]
+        output_pixel[2] = gamma[input_pixel[2]]
+    else:
+        output_pixel[0] = gamma[input_pixel[0]]
+        output_pixel[1] = gamma[input_pixel[1]]
+        output_pixel[2] = gamma[input_pixel[2]]
+    return output_pixel
+
+
+parser = argparse.ArgumentParser(add_help=True,version='1.0', prog='pixelpi.py')
+subparsers = parser.add_subparsers(help='sub command help?')
+common_parser = argparse.ArgumentParser(add_help=False)
+common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
+common_parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
+common_parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
+common_parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int, help='Set the refresh rate in ms (default 500ms)')
+parser_strip = subparsers.add_parser('strip', parents=[common_parser], help='Stip Mode - Display an image using POV and a LED strip')
+parser_strip.set_defaults(func=strip)
+parser_strip.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
+parser_strip.add_argument('--array_height', action='store', dest='array_height', required=True, type=int, default='7', help='Set the Y dimension of your pixel array (height)')
+parser_array = subparsers.add_parser('array', parents=[common_parser], help='Array Mode - Display an image on a pixel array')
+parser_array.set_defaults(func=array)
+parser_array.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
+parser_array.add_argument('--array_width', action='store', dest='array_width', required=True, type=int, default='7', help='Set the X dimension of your pixel array (width)')
+parser_array.add_argument('--array_height', action='store', dest='array_height', required=True, type=int, default='7', help='Set the Y dimension of your pixel array (height)')
+parser_pixelinvaders = subparsers.add_parser('pixelinvaders', parents=[common_parser], help='Pixelinvaders Mode - setup pixelpi as a Pixelinvaders slave')
+parser_pixelinvaders.set_defaults(func=pixelinvaders)
+parser_pixelinvaders.add_argument('--udp-ip', action='store', dest='UDP_IP', required=True, help='Used for PixelInvaders mode, listening address')
+parser_pixelinvaders.add_argument('--udp-port', action='store', dest='UDP_PORT', required=True, default=6803, type=int, help='Used for PixelInvaders mode, listening port')
+parser_fade = subparsers.add_parser('fade', parents=[common_parser], help='Fade Mode - Fade colors on all LEDs')
+parser_fade.set_defaults(func=fade)
+parser_fade.add_argument('--num_leds', action='store', dest='num_leds', required=True, default=50, type=int,  help='Set the  number of LEDs in the string')
+parser_chase = subparsers.add_parser('chase', parents=[common_parser], help='Chase Mode - Chase display test mode')
+parser_chase.set_defaults(func=chase)
+parser_chase.add_argument('--num_leds', action='store', dest='num_leds', required=True, default=50, type=int,  help='Set the  number of LEDs in the string')
+parser_pan = subparsers.add_parser('pan', parents=[common_parser], help='Pan Mode - Pan an image across an array')
+parser_pan.set_defaults(func=pan)
+parser_pan.add_argument('--filename', action='store', dest='filename', required=False, help='Specify the image file eg: hello.png')
+parser_pan.add_argument('--array_width', action='store', dest='array_width', required=True, type=int, default='7', help='Set the X dimension of your pixel array (width)')
+parser_pan.add_argument('--array_height', action='store', dest='array_height', required=True, type=int, default='7', help='Set the Y dimension of your pixel array (height)')
+parser_all_on = subparsers.add_parser('all_on', parents=[common_parser], help='All On Mode - Turn all LEDs On')
+parser_all_on.set_defaults(func=all_on)
+parser_all_on.add_argument('--num_leds', action='store', dest='num_leds', required=True, default=50, type=int,  help='Set the  number of LEDs in the string')
+parser_all_off = subparsers.add_parser('all_off', parents=[common_parser], help='All Off Mode - Turn all LEDs Off')
+parser_all_off.set_defaults(func=all_off)
+parser_all_off.add_argument('--num_leds', action='store', dest='num_leds', required=True, default=50, type=int,  help='Set the  number of LEDs in the string')
+parser_wiimote = subparsers.add_parser('wiimote', parents=[common_parser], help='Wiimote Mode - move and LED witht he Wiimote')
+parser_wiimote.set_defaults(func=wiimote)
+parser_wiimote.add_argument('--num_leds', action='store', dest='num_leds', required=True, default=50, type=int,  help='Set the  number of LEDs in the string')
+
+args = parser.parse_args()
+spidev = file(args.spi_dev_name, "wb")
+# Calculate gamma correction table. This includes
+# LPD8806-specific conversion (7-bit color w/high bit set).
+if args.chip_type == "LDP8806":
+    for i in range(256):
+        gamma[i] = 0x80 | int(pow(float(i) / 255.0, 2.5) * 127.0 + 0.5)
+
+if args.chip_type == "WS2801":
+    for i in range(256):
+        gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
+args.func()
+
+#print "Chip Type             = %s" % args.chip_type
+#print "File Name             = %s" % args.filename
+#print "Display Mode          = %s" % args.mode
+#print "SPI Device Descriptor = %s" % args.spi_dev_name
+#print "Refresh Rate          = %s" % args.refresh_rate
+#print "Array Dimensions      = %dx%d" % (args.array_width, args.array_height)
 def print_state(state):
 	print 'Report Mode:',
 	for r in ['STATUS', 'BTN', 'ACC', 'IR', 'NUNCHUK', 'CLASSIC', 'BALANCE', 'MOTIONPLUS']:
