@@ -156,6 +156,27 @@ YELLOW = bytearray(b'\xff\xff\x00')
 YELLOWGREEN = bytearray(b'\x9a\xcd\x32')
 RAINBOW = [AQUA, AQUAMARINE, AZURE, BEIGE, BISQUE, BLANCHEDALMOND, BLUE, BLUEVIOLET, BROWN, BURLYWOOD, CADETBLUE, CHARTREUSE, CHOCOLATE, CORAL, CORNFLOWERBLUE, CORNSILK, CRIMSON, CYAN, DARKBLUE, DARKCYAN, DARKGOLDENROD, DARKGRAY, DARKGREY, DARKGREEN, DARKKHAKI, DARKMAGENTA, DARKOLIVEGREEN, DARKORANGE, DARKORCHID, DARKRED, DARKSALMON, DARKSEAGREEN, DARKSLATEBLUE, DARKSLATEGRAY, DARKSLATEGREY, DARKTURQUOISE, DARKVIOLET, DEEPPINK, DEEPSKYBLUE, DIMGRAY, DIMGREY, DODGERBLUE, FIREBRICK, FLORALWHITE, FORESTGREEN, FUCHSIA, GAINSBORO, GHOSTWHITE, GOLD, GOLDENROD, GRAY, GREY, GREEN, GREENYELLOW, HONEYDEW, HOTPINK, INDIANRED, INDIGO, IVORY, KHAKI, LAVENDER, LAVENDERBLUSH, LAWNGREEN, LEMONCHIFFON, LIGHTBLUE, LIGHTCORAL, LIGHTCYAN, LIGHTGOLDENRODYELLOW, LIGHTGRAY, LIGHTGREY, LIGHTGREEN, LIGHTPINK, LIGHTSALMON, LIGHTSEAGREEN, LIGHTSKYBLUE, LIGHTSLATEGRAY, LIGHTSLATEGREY, LIGHTSTEELBLUE, LIGHTYELLOW, LIME, LIMEGREEN, LINEN, MAGENTA, MAROON, MEDIUMAQUAMARINE, MEDIUMBLUE, MEDIUMORCHID, MEDIUMPURPLE, MEDIUMSEAGREEN, MEDIUMSLATEBLUE, MEDIUMSPRINGGREEN, MEDIUMTURQUOISE, MEDIUMVIOLETRED, MIDNIGHTBLUE, MINTCREAM, MISTYROSE, MOCCASIN, NAVAJOWHITE, NAVY, OLDLACE, OLIVE, OLIVEDRAB, ORANGE, ORANGERED, ORCHID, PALEGOLDENROD, PALEGREEN, PALETURQUOISE, PALEVIOLETRED, PAPAYAWHIP, PEACHPUFF, PERU, PINK, PLUM, POWDERBLUE, PURPLE, RED, ROSYBROWN, ROYALBLUE, SADDLEBROWN, SALMON, SANDYBROWN, SEAGREEN, SEASHELL, SIENNA, SILVER, SKYBLUE, SLATEBLUE, SLATEGRAY, SLATEGREY, SNOW, SPRINGGREEN, STEELBLUE, TAN, TEAL, THISTLE, TOMATO, TURQUOISE, VIOLET, WHEAT, WHITE, WHITESMOKE, YELLOW, YELLOWGREEN, YELLOWGREEN]
 
+def write_stream(pixels):
+    if args.chip_type == "LPD6803":
+        pixel_out_bytes = bytearray(2)
+        spidev.write(bytearray(b'\x00\x00'))
+        pixel_count = len(pixels) / PIXEL_SIZE
+        for pixel_index in range(pixel_count):
+            
+            pixel_in = bytearray(pixels[(pixel_index * PIXEL_SIZE):((pixel_index * PIXEL_SIZE) + PIXEL_SIZE)])
+
+            pixel_out = 0b1000000000000000 # bit 16 must be ON
+            pixel_out |= (pixel_in[0] & 0x00F8) << 7 # RED is bits 11-15
+            pixel_out |= (pixel_in[1] & 0x00F8) << 2 # GREEN is bits 6-10
+            pixel_out |= (pixel_in[2] & 0x00F8) >> 3 # BLUE is bits 1-5
+
+            pixel_out_bytes[0] = (pixel_out & 0xFF00) >> 8
+            pixel_out_bytes[1] = (pixel_out & 0x00FF) >> 0
+            spidev.write(pixel_out_bytes)
+    else:
+        spidev.write(pixels)
+
+    return
 
 def correct_pixel_brightness(pixel):
 
@@ -186,7 +207,7 @@ def pixelinvaders():
 			
 			pixels[((pixel_index)*PIXEL_SIZE):] = filter_pixel(pixel_to_filter[:], 1)
         		
-		spidev.write(pixels)
+		write_stream(pixels)
 		spidev.flush()
 
 def strip():
@@ -220,7 +241,7 @@ def strip():
     print "Displaying..."
     while True:
         for x in range(image_width):
-            spidev.write(column[x])
+            write_stream(column[x])
             spidev.flush()
             time.sleep(0.001)
         time.sleep((args.refresh_rate/1000.0))
@@ -247,7 +268,7 @@ def array():
         value = bytearray(input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])])
 	pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
     print "Displaying..."
-    spidev.write(pixel_output)
+    write_stream(pixel_output)
     spidev.flush()
 
 def pan():
@@ -275,14 +296,14 @@ def pan():
 		    value = bytearray(input_image[int(int(pixel_map[array_index][0])+ x_offset), int(pixel_map[array_index][1])])
 		    pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
 		print "Displaying..."
-		spidev.write(pixel_output)
+		write_stream(pixel_output)
 		spidev.flush()
 		time.sleep((args.refresh_rate)/1000.0)
 
 def all_off():
     pixel_output = bytearray(args.num_leds * PIXEL_SIZE + 3)
     print "Turning all LEDs Off"
-    spidev.write(pixel_output)
+    write_stream(pixel_output)
     spidev.flush()
 
 def all_on():
@@ -290,7 +311,7 @@ def all_on():
     print "Turning all LEDs On"
     for led in range(args.num_leds):
         pixel_output[led*PIXEL_SIZE:] = filter_pixel(WHITE, 1)
-    spidev.write(pixel_output)
+    write_stream(pixel_output)
     spidev.flush()
 
 def fade():
@@ -304,14 +325,14 @@ def fade():
                 current_color[:] = filter_pixel(color[:], brightness)
                 for pixel_offset in [(x * 3) for x in range(args.num_leds)]:
 			pixel_output[pixel_offset:] = current_color[:]
-                spidev.write(pixel_output)
+                write_stream(pixel_output)
                 spidev.flush()
                 time.sleep((args.refresh_rate)/1000.0)
             for brightness in [x*0.01 for x in range(100,0, -1)]:
                 current_color[:] = filter_pixel(color[:], brightness)
                 for pixel_offset in [(x * 3) for x in range(args.num_leds)]:
 			pixel_output[pixel_offset:] = current_color[:]
-                spidev.write(pixel_output)
+                write_stream(pixel_output)
                 spidev.flush()
                 time.sleep((args.refresh_rate)/1000.0)
 
@@ -346,7 +367,7 @@ def wiimote():
 
 	pixel_output[((pixel_index)*PIXEL_SIZE):] = filter_pixel(wii_color[:], 1)
 	pixel_output += '\x00'* ((args.num_leds+1-pixel_index)*PIXEL_SIZE)
-	spidev.write(pixel_output)
+	write_stream(pixel_output)
 	spidev.flush()
 	time.sleep(wii_move_timeout)
 
@@ -364,7 +385,7 @@ def chase():
                 pixel_output[((pixel_index-1)*PIXEL_SIZE):] = filter_pixel(current_color[:],0.4) 
                 pixel_output[((pixel_index)*PIXEL_SIZE):] = filter_pixel(current_color[:], 1)
 		pixel_output += '\x00'* ((args.num_leds-1-pixel_index)*PIXEL_SIZE)
-                spidev.write(pixel_output)
+                write_stream(pixel_output)
                 spidev.flush()
                 time.sleep((args.refresh_rate)/1000.0)
                 pixel_output[((pixel_index-2)*PIXEL_SIZE):] = filter_pixel(current_color[:], 0)
@@ -399,7 +420,7 @@ def filter_pixel(input_pixel, brightness):
 parser = argparse.ArgumentParser(add_help=True,version='1.0', prog='pixelpi.py')
 subparsers = parser.add_subparsers(help='sub command help?')
 common_parser = argparse.ArgumentParser(add_help=False)
-common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
+common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806', 'LPD6803'], help='Specify chip type LPD6803, LDP8806 or WS2801')
 common_parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 common_parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
 common_parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int, help='Set the refresh rate in ms (default 500ms)')
@@ -448,6 +469,11 @@ if args.chip_type == "LDP8806":
 if args.chip_type == "WS2801":
     for i in range(256):
         gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
+        
+# LPD6803 has 5 bit color, this seems to work but is not exact.
+if args.chip_type == "LPD6803":
+    for i in range(256):
+        gamma[i] = int(pow(float(i) / 255.0, 2.0) * 255.0 + 0.5)
 args.func()
 
 #print "Chip Type             = %s" % args.chip_type
