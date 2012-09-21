@@ -207,7 +207,7 @@ def strip():
         for y in range(args.array_height):
             value = input_image[x, y]
             y3 = y * 3
-            if args.chip_type == "LDP8806":
+            if args.chip_type == "LPD8806":
                 # Convert RGB into column-wise GRB bytearray list.
                 column[x][y3] = gamma[value[1]]
                 column[x][y3 + 1] = gamma[value[0]]
@@ -384,7 +384,7 @@ def filter_pixel(input_pixel, brightness):
     input_pixel[1] = int(brightness * input_pixel[1])
     input_pixel[2] = int(brightness * input_pixel[2])
     output_pixel = bytearray(PIXEL_SIZE)
-    if args.chip_type == "LDP8806":
+    if args.chip_type == "LPD8806":
         # Convert RGB into GRB bytearray list.
         output_pixel[0] = gamma[input_pixel[1]]
         output_pixel[1] = gamma[input_pixel[0]]
@@ -399,7 +399,7 @@ def filter_pixel(input_pixel, brightness):
 parser = argparse.ArgumentParser(add_help=True,version='1.0', prog='pixelpi.py')
 subparsers = parser.add_subparsers(help='sub command help?')
 common_parser = argparse.ArgumentParser(add_help=False)
-common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806'], help='Specify chip type LDP8806 or WS2801')
+common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LPD8806'], help='Specify chip type LPD8806 or WS2801')
 common_parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 common_parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
 common_parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int, help='Set the refresh rate in ms (default 500ms)')
@@ -441,7 +441,7 @@ args = parser.parse_args()
 spidev = file(args.spi_dev_name, "wb")
 # Calculate gamma correction table. This includes
 # LPD8806-specific conversion (7-bit color w/high bit set).
-if args.chip_type == "LDP8806":
+if args.chip_type == "LPD8806":
     for i in range(256):
         gamma[i] = 0x80 | int(pow(float(i) / 255.0, 2.5) * 127.0 + 0.5)
 
