@@ -247,29 +247,41 @@ def strip():
         time.sleep((args.refresh_rate/1000.0))
 
 def array():
-    img = Image.open(args.filename).convert("RGB")
-    input_image = img.load()
-    image_width = img.size[0]
-    image_height = img.size[1]
-    print "%dx%d pixels" % img.size
-    print "Reading in array map"
-    pixel_map_csv = csv.reader(open("pixel_map.csv", "rb"))
-    pixel_map = []
-    for p in pixel_map_csv:
-        pixel_map.append(p)
-    if len(pixel_map) != args.array_width * args.array_height:
-        print "Map size error"
-    print "Remapping"
-    value = bytearray(PIXEL_SIZE)
+    images = []
+    if ('filelist.txt' in args.filename):
+        with open(args.filename, 'r') as file:
+            for filename in file:
+                filename = filename.rstrip()
+                if not filename: continue
+                print filename
+                images.append(Image.open(filename).convert("RGB"))
+    else:
+        images.append(Image.open(args.filename).convert("RGB"))
 
-    # Create a byte array ordered according to the pixel map file
-    pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
-    for array_index in range(len(pixel_map)):
-        value = bytearray(input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])])
-	pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
-    print "Displaying..."
-    write_stream(pixel_output)
-    spidev.flush()
+    for img in images:
+        input_image = img.load()
+        image_width = img.size[0]
+        image_height = img.size[1]
+        print "%dx%d pixels" % img.size
+        print "Reading in array map"
+        pixel_map_csv = csv.reader(open("pixel_map.csv", "rb"))
+        pixel_map = []
+        for p in pixel_map_csv:
+            pixel_map.append(p)
+        if len(pixel_map) != args.array_width * args.array_height:
+            print "Map size error"
+        print "Remapping"
+        value = bytearray(PIXEL_SIZE)
+
+        # Create a byte array ordered according to the pixel map file
+        pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
+        for array_index in range(len(pixel_map)):
+            value = bytearray(input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])])
+        pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
+        print "Displaying..."
+        write_stream(pixel_output)
+        spidev.flush()
+        time.sleep((args.refresh_rate)/1000.0)
 
 def pan():
     img = Image.open(args.filename).convert("RGB")
