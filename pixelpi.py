@@ -402,10 +402,10 @@ def chase():
                 pixel_output[((pixel_index-1)*PIXEL_SIZE):] = filter_pixel(current_color[:],0.4) 
                 pixel_output[((pixel_index)*PIXEL_SIZE):] = filter_pixel(current_color[:], 1)
                 pixel_output += '\x00'* ((args.num_leds-1-pixel_index)*PIXEL_SIZE)
-            write_stream(pixel_output)
-            spidev.flush()
-            time.sleep((args.refresh_rate)/1000.0)
-            pixel_output[((pixel_index-2)*PIXEL_SIZE):] = filter_pixel(current_color[:], 0)
+                write_stream(pixel_output)
+                spidev.flush()
+                time.sleep((args.refresh_rate)/1000.0)
+                pixel_output[((pixel_index-2)*PIXEL_SIZE):] = filter_pixel(current_color[:], 0)
 
 
 
