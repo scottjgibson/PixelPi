@@ -158,7 +158,7 @@ YELLOWGREEN = bytearray(b'\x9a\xcd\x32')
 RAINBOW = [AQUA, AQUAMARINE, AZURE, BEIGE, BISQUE, BLANCHEDALMOND, BLUE, BLUEVIOLET, BROWN, BURLYWOOD, CADETBLUE, CHARTREUSE, CHOCOLATE, CORAL, CORNFLOWERBLUE, CORNSILK, CRIMSON, CYAN, DARKBLUE, DARKCYAN, DARKGOLDENROD, DARKGRAY, DARKGREY, DARKGREEN, DARKKHAKI, DARKMAGENTA, DARKOLIVEGREEN, DARKORANGE, DARKORCHID, DARKRED, DARKSALMON, DARKSEAGREEN, DARKSLATEBLUE, DARKSLATEGRAY, DARKSLATEGREY, DARKTURQUOISE, DARKVIOLET, DEEPPINK, DEEPSKYBLUE, DIMGRAY, DIMGREY, DODGERBLUE, FIREBRICK, FLORALWHITE, FORESTGREEN, FUCHSIA, GAINSBORO, GHOSTWHITE, GOLD, GOLDENROD, GRAY, GREY, GREEN, GREENYELLOW, HONEYDEW, HOTPINK, INDIANRED, INDIGO, IVORY, KHAKI, LAVENDER, LAVENDERBLUSH, LAWNGREEN, LEMONCHIFFON, LIGHTBLUE, LIGHTCORAL, LIGHTCYAN, LIGHTGOLDENRODYELLOW, LIGHTGRAY, LIGHTGREY, LIGHTGREEN, LIGHTPINK, LIGHTSALMON, LIGHTSEAGREEN, LIGHTSKYBLUE, LIGHTSLATEGRAY, LIGHTSLATEGREY, LIGHTSTEELBLUE, LIGHTYELLOW, LIME, LIMEGREEN, LINEN, MAGENTA, MAROON, MEDIUMAQUAMARINE, MEDIUMBLUE, MEDIUMORCHID, MEDIUMPURPLE, MEDIUMSEAGREEN, MEDIUMSLATEBLUE, MEDIUMSPRINGGREEN, MEDIUMTURQUOISE, MEDIUMVIOLETRED, MIDNIGHTBLUE, MINTCREAM, MISTYROSE, MOCCASIN, NAVAJOWHITE, NAVY, OLDLACE, OLIVE, OLIVEDRAB, ORANGE, ORANGERED, ORCHID, PALEGOLDENROD, PALEGREEN, PALETURQUOISE, PALEVIOLETRED, PAPAYAWHIP, PEACHPUFF, PERU, PINK, PLUM, POWDERBLUE, PURPLE, RED, ROSYBROWN, ROYALBLUE, SADDLEBROWN, SALMON, SANDYBROWN, SEAGREEN, SEASHELL, SIENNA, SILVER, SKYBLUE, SLATEBLUE, SLATEGRAY, SLATEGREY, SNOW, SPRINGGREEN, STEELBLUE, TAN, TEAL, THISTLE, TOMATO, TURQUOISE, VIOLET, WHEAT, WHITE, WHITESMOKE, YELLOW, YELLOWGREEN, YELLOWGREEN]
 
 def write_stream(pixels):
-    if args.chip_type == "LPD6803":
+    if args.chip_type == "LDP6803":
         pixel_out_bytes = bytearray(2)
         spidev.write(bytearray(b'\x00\x00'))
         pixel_count = len(pixels) / PIXEL_SIZE
@@ -174,7 +174,7 @@ def write_stream(pixels):
             pixel_out_bytes[0] = (pixel_out & 0xFF00) >> 8
             pixel_out_bytes[1] = (pixel_out & 0x00FF) >> 0
             spidev.write(pixel_out_bytes)
-    elif args.chip_type == "LPD8806":
+    elif args.chip_type == "LDP8806":
         spidev.write(pixels)
         spidev.write(bytearray(b'\x00\x00\x00')) #zero fill the last to prevent stray colors at the end
         spidev.write(bytearray(b'\x00'))
@@ -233,7 +233,7 @@ def strip():
         for y in range(args.array_height):
             value = input_image[x, y]
             y3 = y * 3
-            if args.chip_type == "LPD8806":
+            if args.chip_type == "LDP8806":
                 # Convert RGB into column-wise GRB bytearray list.
                 column[x][y3] = gamma[value[1]]
                 column[x][y3 + 1] = gamma[value[0]]
@@ -422,10 +422,10 @@ def filter_pixel(input_pixel, brightness):
     input_pixel[1] = int(brightness * input_pixel[1])
     input_pixel[2] = int(brightness * input_pixel[2])
     output_pixel = bytearray(PIXEL_SIZE)
-    if args.chip_type == "LPD8806":
+    if args.chip_type == "LDP8806":
         # Convert RGB into GRB bytearray list.
 
-        # Some LPD8806 strips use this ordering:
+        # Some LDP8806 strips use this ordering:
         # output_pixel[0] = gamma[input_pixel[1]]
         # output_pixel[1] = gamma[input_pixel[0]]
         # output_pixel[2] = gamma[input_pixel[2]]
@@ -445,7 +445,7 @@ def filter_pixel(input_pixel, brightness):
 parser = argparse.ArgumentParser(add_help=True,version='1.0', prog='pixelpi.py')
 subparsers = parser.add_subparsers(help='sub command help?')
 common_parser = argparse.ArgumentParser(add_help=False)
-common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806', 'LPD6803'], help='Specify chip type LPD6803, LDP8806 or WS2801')
+common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LDP8806', 'LDP6803'], help='Specify chip type LDP6803, LDP8806 or WS2801')
 common_parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 common_parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
 common_parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int, help='Set the refresh rate in ms (default 500ms)')
@@ -486,8 +486,8 @@ parser_wiimote.add_argument('--num_leds', action='store', dest='num_leds', requi
 args = parser.parse_args()
 spidev = file(args.spi_dev_name, "wb")
 # Calculate gamma correction table. This includes
-# LPD8806-specific conversion (7-bit color w/high bit set).
-if args.chip_type == "LPD8806":
+# LDP8806-specific conversion (7-bit color w/high bit set).
+if args.chip_type == "LDP8806":
     for i in range(256):
         gamma[i] = 0x80 | int(pow(float(i) / 255.0, 2.5) * 127.0 + 0.5)
 
@@ -495,8 +495,8 @@ if args.chip_type == "WS2801":
     for i in range(256):
         gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
         
-# LPD6803 has 5 bit color, this seems to work but is not exact.
-if args.chip_type == "LPD6803":
+#LDP6803 has 5 bit color, this seems to work but is not exact.
+if args.chip_type == "LDP6803":
     for i in range(256):
         gamma[i] = int(pow(float(i) / 255.0, 2.0) * 255.0 + 0.5)
 args.func()
