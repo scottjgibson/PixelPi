@@ -199,5 +199,22 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
                         Set the refresh rate in ms (default 500ms)
                     --num_leds NUM_LEDS   Set the number of LEDs in the string
 
+pixel_map.csv format
+===================
+- each line pertains to a pixel, the first line is the first pixel in the string (closest to the RaspberryPi)
+- each line has two entries (x and y location)
+
+
+The image is mapped like so:
+
+X0Y0 X1Y0 X2Y0...
+X0Y1
+X0Y2
+...
+
+- so if the first pixel of your array is the lower left hand corner (of a 6x6 array) the entry would be
+0,6
+if your second pixel is the lower second from left pixel the entry would be:
+1,6 
 
 
