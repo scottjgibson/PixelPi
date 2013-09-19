@@ -158,7 +158,7 @@ YELLOWGREEN = bytearray(b'\x9a\xcd\x32')
 RAINBOW = [AQUA, AQUAMARINE, AZURE, BEIGE, BISQUE, BLANCHEDALMOND, BLUE, BLUEVIOLET, BROWN, BURLYWOOD, CADETBLUE, CHARTREUSE, CHOCOLATE, CORAL, CORNFLOWERBLUE, CORNSILK, CRIMSON, CYAN, DARKBLUE, DARKCYAN, DARKGOLDENROD, DARKGRAY, DARKGREY, DARKGREEN, DARKKHAKI, DARKMAGENTA, DARKOLIVEGREEN, DARKORANGE, DARKORCHID, DARKRED, DARKSALMON, DARKSEAGREEN, DARKSLATEBLUE, DARKSLATEGRAY, DARKSLATEGREY, DARKTURQUOISE, DARKVIOLET, DEEPPINK, DEEPSKYBLUE, DIMGRAY, DIMGREY, DODGERBLUE, FIREBRICK, FLORALWHITE, FORESTGREEN, FUCHSIA, GAINSBORO, GHOSTWHITE, GOLD, GOLDENROD, GRAY, GREY, GREEN, GREENYELLOW, HONEYDEW, HOTPINK, INDIANRED, INDIGO, IVORY, KHAKI, LAVENDER, LAVENDERBLUSH, LAWNGREEN, LEMONCHIFFON, LIGHTBLUE, LIGHTCORAL, LIGHTCYAN, LIGHTGOLDENRODYELLOW, LIGHTGRAY, LIGHTGREY, LIGHTGREEN, LIGHTPINK, LIGHTSALMON, LIGHTSEAGREEN, LIGHTSKYBLUE, LIGHTSLATEGRAY, LIGHTSLATEGREY, LIGHTSTEELBLUE, LIGHTYELLOW, LIME, LIMEGREEN, LINEN, MAGENTA, MAROON, MEDIUMAQUAMARINE, MEDIUMBLUE, MEDIUMORCHID, MEDIUMPURPLE, MEDIUMSEAGREEN, MEDIUMSLATEBLUE, MEDIUMSPRINGGREEN, MEDIUMTURQUOISE, MEDIUMVIOLETRED, MIDNIGHTBLUE, MINTCREAM, MISTYROSE, MOCCASIN, NAVAJOWHITE, NAVY, OLDLACE, OLIVE, OLIVEDRAB, ORANGE, ORANGERED, ORCHID, PALEGOLDENROD, PALEGREEN, PALETURQUOISE, PALEVIOLETRED, PAPAYAWHIP, PEACHPUFF, PERU, PINK, PLUM, POWDERBLUE, PURPLE, RED, ROSYBROWN, ROYALBLUE, SADDLEBROWN, SALMON, SANDYBROWN, SEAGREEN, SEASHELL, SIENNA, SILVER, SKYBLUE, SLATEBLUE, SLATEGRAY, SLATEGREY, SNOW, SPRINGGREEN, STEELBLUE, TAN, TEAL, THISTLE, TOMATO, TURQUOISE, VIOLET, WHEAT, WHITE, WHITESMOKE, YELLOW, YELLOWGREEN, YELLOWGREEN]
 
 def write_stream(pixels):
-    if args.chip_type == "LDP6803":
+    if args.chip_type == "LPD6803":
         pixel_out_bytes = bytearray(2)
         spidev.write(bytearray(b'\x00\x00'))
         pixel_count = len(pixels) / PIXEL_SIZE
@@ -445,7 +445,7 @@ def filter_pixel(input_pixel, brightness):
 parser = argparse.ArgumentParser(add_help=True,version='1.0', prog='pixelpi.py')
 subparsers = parser.add_subparsers(help='sub command help?')
 common_parser = argparse.ArgumentParser(add_help=False)
-common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LPD8806', 'LDP6803'], help='Specify chip type LDP6803, LPD8806 or WS2801')
+common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LPD8806', 'LPD6803'], help='Specify chip type LPD6803, LPD8806 or WS2801')
 common_parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
 common_parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
 common_parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int, help='Set the refresh rate in ms (default 500ms)')
@@ -495,8 +495,8 @@ if args.chip_type == "WS2801":
     for i in range(256):
         gamma[i] = int(pow(float(i) / 255.0, 2.5) * 255.0 )
         
-#LDP6803 has 5 bit color, this seems to work but is not exact.
-if args.chip_type == "LDP6803":
+#LPD6803 has 5 bit color, this seems to work but is not exact.
+if args.chip_type == "LPD6803":
     for i in range(256):
         gamma[i] = int(pow(float(i) / 255.0, 2.0) * 255.0 + 0.5)
 args.func()

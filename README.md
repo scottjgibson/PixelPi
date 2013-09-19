@@ -32,13 +32,13 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py strip --help 
-                                    usage: pixelpi.py strip [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                                    usage: pixelpi.py strip [-h] [--chip {WS2801,LPD8806}] [--verbose]
                                                             [--spi_dev SPI_DEV_NAME] [--refresh_rate REFRESH_RATE]
                                                            [--filename FILENAME] --array_height ARRAY_HEIGHT
 
                                     optional arguments:
                                       -h, --help            show this help message and exit
-                                      --chip {WS2801,LDP8806} Specify chip type LDP8806 or WS2801
+                                      --chip {WS2801,LPD8806} Specify chip type LPD8806 or WS2801
                                       --verbose             enable verbose mode
                                       --spi_dev SPI_DEV_NAME Set the SPI device descriptor
                                       --refresh_rate REFRESH_RATE  Set the refresh rate in ms (default 500ms)
@@ -47,15 +47,15 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py array --help 
-                  usage: pixelpi.py array [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py array [-h] [--chip {WS2801,LPD8806}] [--verbose]
                         [--spi_dev SPI_DEV_NAME] [--refresh_rate REFRESH_RATE]
                         [--filename FILENAME] --array_width ARRAY_WIDTH
                         --array_height ARRAY_HEIGHT
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
@@ -70,15 +70,15 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py pixelinvaders --help 
-                  usage: pixelpi.py pixelinvaders [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py pixelinvaders [-h] [--chip {WS2801,LPD8806}] [--verbose]
                                 [--spi_dev SPI_DEV_NAME]
                                 [--refresh_rate REFRESH_RATE] --udp-ip UDP_IP
                                 --udp-port UDP_PORT
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
@@ -89,14 +89,14 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py fade --help 
-                  usage: pixelpi.py fade [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py fade [-h] [--chip {WS2801,LPD8806}] [--verbose]
                        [--spi_dev SPI_DEV_NAME] [--refresh_rate REFRESH_RATE]
                        --num_leds NUM_LEDS
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
@@ -107,14 +107,14 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py chase --help 
-                  usage: pixelpi.py chase [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py chase [-h] [--chip {WS2801,LPD8806}] [--verbose]
                         [--spi_dev SPI_DEV_NAME] [--refresh_rate REFRESH_RATE]
                         --num_leds NUM_LEDS
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
@@ -125,15 +125,15 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py pan --help 
-                  usage: pixelpi.py pan [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py pan [-h] [--chip {WS2801,LPD8806}] [--verbose]
                       [--spi_dev SPI_DEV_NAME] [--refresh_rate REFRESH_RATE]
                       [--filename FILENAME] --array_width ARRAY_WIDTH
                       --array_height ARRAY_HEIGHT
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
@@ -148,14 +148,14 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py all_on --help 
-                  usage: pixelpi.py all_on [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py all_on [-h] [--chip {WS2801,LPD8806}] [--verbose]
                          [--spi_dev SPI_DEV_NAME]
                          [--refresh_rate REFRESH_RATE] --num_leds NUM_LEDS
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
@@ -166,14 +166,14 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py all_off --help 
-                  usage: pixelpi.py all_off [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py all_off [-h] [--chip {WS2801,LPD8806}] [--verbose]
                           [--spi_dev SPI_DEV_NAME]
                           [--refresh_rate REFRESH_RATE] --num_leds NUM_LEDS
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
@@ -184,14 +184,14 @@ http://thegreatgeekery.blogspot.ca/2012/08/raspberry-pi-and-ws2801.html
 
 
                   sudo python pixelpi.py wiimote --help 
-                  usage: pixelpi.py wiimote [-h] [--chip {WS2801,LDP8806}] [--verbose]
+                  usage: pixelpi.py wiimote [-h] [--chip {WS2801,LPD8806}] [--verbose]
                           [--spi_dev SPI_DEV_NAME]
                           [--refresh_rate REFRESH_RATE] --num_leds NUM_LEDS
 
                   optional arguments:
                     -h, --help            show this help message and exit
-                    --chip {WS2801,LDP8806}
-                        Specify chip type LDP8806 or WS2801
+                    --chip {WS2801,LPD8806}
+                        Specify chip type LPD8806 or WS2801
                     --verbose             enable verbose mode
                     --spi_dev SPI_DEV_NAME
                         Set the SPI device descriptor
