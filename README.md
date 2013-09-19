@@ -212,7 +212,7 @@ X0Y1
 X0Y2
 ...
 
-- so if the first pixel of your array is the lower left hand corner (of a 6x6 array) the entry would be
+- so if the first pixel of your array is the lower left hand corner (of a 7x7 array) the entry would be
 0,6
 if your second pixel is the lower second from left pixel the entry would be:
 1,6 
