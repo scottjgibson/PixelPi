@@ -304,10 +304,17 @@ def array():
         value = bytearray(PIXEL_SIZE)
 
         # Create a byte array ordered according to the pixel map file
-        pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
+        if args.chip_type == "SM16716":
+           pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE_SM16716)
+        else:
+           pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
         for array_index in range(len(pixel_map)):
             value = bytearray(input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])])
-        pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
+        
+        if args.chip_type == "SM16716":
+           pixel_output[(array_index * PIXEL_SIZE_SM16716):] = filter_pixel(value[:], 1)
+        else:
+           pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
         print "Displaying..."
         write_stream(pixel_output)
         spidev.flush()
@@ -329,12 +336,19 @@ def pan():
     print "Remapping"
 
     # Create a byte array ordered according to the pixel map file
-    pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
+    if args.chip_type == "SM16716":
+      pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE_SM16716)
+    else:
+      pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
     while True:
         for x_offset in range(image_width - args.array_width):
             for array_index in range(len(pixel_map)):
                 value = bytearray(input_image[int(int(pixel_map[array_index][0])+ x_offset), int(pixel_map[array_index][1])])
-                pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
+                if args.chip_type == "SM16716":
+                   pixel_output[(array_index * PIXEL_SIZE_SM16716):] = filter_pixel(value[:], 1)
+                else:
+                   pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
+                
         print "Displaying..."
         write_stream(pixel_output)
         spidev.flush()

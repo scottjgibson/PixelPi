@@ -13,7 +13,6 @@ Supported Chips:
 - LPD6803
 - SM16716
 
-
                   sudo python pixelpi.py --help
                   usage: pixelpi.py [-h] [-v]
                                     {strip,array,pixelinvaders,fade,chase,pan,all_on,all_off,wiimote}
