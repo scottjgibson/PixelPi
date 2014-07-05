@@ -171,7 +171,7 @@ RAINBOW = [AQUA, AQUAMARINE, AZURE, BEIGE, BISQUE, BLANCHEDALMOND, BLUE, BLUEVIO
 def write_stream(pixels):
     if args.chip_type == "LPD6803":
         pixel_out_bytes = bytearray(2)
-        spidev.write(bytearray(b'\x00\x00'))
+        spidev.write(bytearray(4))
         pixel_count = len(pixels) / PIXEL_SIZE
         for pixel_index in range(pixel_count):
 
@@ -185,6 +185,7 @@ def write_stream(pixels):
             pixel_out_bytes[0] = (pixel_out & 0xFF00) >> 8
             pixel_out_bytes[1] = (pixel_out & 0x00FF) >> 0
             spidev.write(pixel_out_bytes)
+        spidev.write(bytearray(args.num_leds / 8 + 1))
     elif args.chip_type == "LPD8806":
         spidev.write(pixels)
         spidev.write(bytearray(b'\x00\x00\x00'))  # zero fill the last to prevent stray colors at the end
