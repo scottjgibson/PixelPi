@@ -185,7 +185,7 @@ def write_stream(pixels):
             pixel_out_bytes[0] = (pixel_out & 0xFF00) >> 8
             pixel_out_bytes[1] = (pixel_out & 0x00FF) >> 0
             spidev.write(pixel_out_bytes)
-        spidev.write(bytearray(args.num_leds / 8 + 1))
+        spidev.write(bytearray(len(pixels) / 8 + 1))
     elif args.chip_type == "LPD8806":
         spidev.write(pixels)
         spidev.write(bytearray(b'\x00\x00\x00'))  # zero fill the last to prevent stray colors at the end
