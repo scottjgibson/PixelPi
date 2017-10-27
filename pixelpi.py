@@ -2,6 +2,7 @@ import argparse
 import csv
 import socket
 import time
+import sys
 
 try:
     import cwiid
@@ -289,42 +290,75 @@ def array():
             for filename in file:
                 filename = filename.rstrip()
                 if not filename:
+                    print "[ERROR] Not a file or not readable: ",filename
                     continue
-                print filename
                 images.append(Image.open(filename).convert("RGB"))
+                print "[INFO] Added file ",filename
     else:
         images.append(Image.open(args.filename).convert("RGB"))
+        print "[INFO] Added file ",args.filename
 
     for img in images:
         input_image = img.load()
-        print "%dx%d pixels" % img.size
-        print "Reading in array map"
+        print "[INFO] Imaged loaded: %dx%d pixels" % img.size
+
+        print "[INFO] Reading pixel_map.csv"
         pixel_map_csv = csv.reader(open("pixel_map.csv", "rb"))
         pixel_map = []
         for p in pixel_map_csv:
             pixel_map.append(p)
+
+        # 171026-AHo: added verbose output
+        if args.verbose:
+            print "[debug] pixel_map:"
+            for i in range(1, len(pixel_map)):
+                print pixel_map[i]
+
         if len(pixel_map) != args.array_width * args.array_height:
-            print "Map size error"
-        print "Remapping"
+            print "[ERROR] Reading array map from pixel_map.csv: Map size error"
+
+        print "[INFO] Creating buffer for color values (",PIXEL_SIZE," bytes)"
         value = bytearray(PIXEL_SIZE)
 
-        # Create a byte array ordered according to the pixel map file
+        # Create empty byte array (will be filled with SPI data)
+        print "[INFO] Creating buffer for SPI data"
         if args.chip_type == "SM16716":
             pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE_SM16716)
+            print "[INFO] Buffersize = ",args.array_width * args.array_height * PIXEL_SIZE_SM16716," Bytes"
         else:
             pixel_output = bytearray(args.array_width * args.array_height * PIXEL_SIZE + 1)
+            print "[INFO] Buffersize = ",args.array_width * args.array_height * PIXEL_SIZE + 1," Bytes"
+            
+        # 171026-AHo: added verbose output
+        if args.verbose:
+            print "[debug] pixel_output:"
+            print ''.join('{:02x}'.format(x) for x in pixel_output)
+            
+        print "[INFO] Creating SPI data"
         for array_index in range(len(pixel_map)):
             value = bytearray(input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])])
+            
+            if args.verbose:
+                print "[debug] Processing ",int(pixel_map[array_index][0]),"/",int(pixel_map[array_index][1])," -> ",input_image[int(pixel_map[array_index][0]), int(pixel_map[array_index][1])], ''.join('{:02x}'.format(x) for x in value)
 
-        if args.chip_type == "SM16716":
-            pixel_output[(array_index * PIXEL_SIZE_SM16716):] = filter_pixel(value[:], 1)
-        else:
-            pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
-        print "Displaying..."
+            # 171026-AHo: bugfix, this block has to be executed inside the "for"-loop
+            if args.chip_type == "SM16716":
+                pixel_output[(array_index * PIXEL_SIZE_SM16716):] = filter_pixel(value[:], 1)
+            else:
+                pixel_output[(array_index * PIXEL_SIZE):] = filter_pixel(value[:], 1)
+                # 171026-AHo: added verbose output
+                #if args.verbose:
+                #    print "[debug] pixel_output:"
+                #    print ''.join('{:02x}'.format(x) for x in pixel_output)
+
+        print "[INFO] Displaying SPI data"
+        if args.verbose:
+            print "[debug] pixel_output:"
+            print ''.join('{:02x}'.format(x) for x in pixel_output)
         write_stream(pixel_output)
         spidev.flush()
         time.sleep((args.refresh_rate) / 1000.0)
-
+        print "[INFO] Goodbye"
 
 def pan():
     img = Image.open(args.filename).convert("RGB")
@@ -549,7 +583,9 @@ parser = argparse.ArgumentParser(add_help=True, version='1.0', prog='pixelpi.py'
 subparsers = parser.add_subparsers(help='sub command help?')
 common_parser = argparse.ArgumentParser(add_help=False)
 common_parser.add_argument('--chip', action='store', dest='chip_type', default='WS2801', choices=['WS2801', 'LPD8806', 'LPD6803', 'SM16716'], help='Specify chip type LPD6803, LPD8806, WS2801 or SM16716')
-common_parser.add_argument('--verbose', action='store_true', dest='verbose', default=True, help='enable verbose mode')
+#171026-AHo: default for --verbose changed from 'true' to 'false'
+#action="store_true", default=False
+common_parser.add_argument('--verbose', action='store_true', default=False, dest='verbose', help='enable verbose mode')
 common_parser.add_argument('--spi_dev', action='store', dest='spi_dev_name', required=False, default='/dev/spidev0.0', help='Set the SPI device descriptor')
 common_parser.add_argument('--refresh_rate', action='store', dest='refresh_rate', required=False, default=500, type=int, help='Set the refresh rate in ms (default 500ms)')
 parser_strip = subparsers.add_parser('strip', parents=[common_parser], help='Stip Mode - Display an image using POV and a LED strip')
